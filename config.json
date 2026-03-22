@@ -12,19 +12,19 @@
   "routes": [
     {
       "path": "/",
-      "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false",
+      "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false"
     },
     {
       "path": "/math",
-      "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Mathematics",
+      "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Mathematics"
     },
     {
       "path": "/art",
-      "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Art",
+      "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Art"
     },
     {
       "path": "/audio",
-      "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Audio",
+      "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Audio"
     }
   ]
 }

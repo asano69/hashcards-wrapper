@@ -45,12 +45,17 @@ Sub-path routes (`/math`, `/art`, etc.) automatically strip their prefix before 
 
 ## Usage
 
-For example with Docker Compose:
+Clone the repository to get the example config and deck:
+```bash
+git clone https://github.com/asano69/hashcards-wrapper.git
+cd hashcards-wrapper
+```
 
+Then start with Docker Compose:
 ```yaml
 # compose.yml
 services:
-  hashcards:
+  hashwrap:
     image: ghcr.io/asano69/hashcards-wrapper:latest
     ports:
       - "3001:3000"
@@ -59,9 +64,6 @@ services:
       - ./example:/app/data
     restart: unless-stopped
 ```
-
-Then:
-
 ```bash
 docker compose up -d
 ```
