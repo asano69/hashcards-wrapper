@@ -53,7 +53,7 @@ cd hashcards-wrapper
 
 Then start with Docker Compose:
 ```yaml
-# compose.yml
+# compose.yaml
 services:
   hashwrap:
     image: ghcr.io/asano69/hashcards-wrapper:latest
@@ -210,7 +210,7 @@ Default icons (black background, white `#` glyph) can be regenerated with:
 ```
 make icon
 ```
-Requires [ImageMagick](https://imagemagick.org/). 
+Requires [ImageMagick](https://imagemagick.org/).
 
 ---
 

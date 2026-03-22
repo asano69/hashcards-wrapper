@@ -3,8 +3,22 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+    paths:
+      - HASHCARDS_VERSION
+      - go.mod
+      - go.sum
+      - main.go
+      - pwa/**
+      - entrypoint.sh
   pull_request:
     branches: [main]
+    paths:
+      - HASHCARDS_VERSION
+      - go.mod
+      - go.sum
+      - main.go
+      - pwa/**
+      - entrypoint.sh
 env:
   IMAGE_NAME: ${{ github.repository }}
 jobs:
