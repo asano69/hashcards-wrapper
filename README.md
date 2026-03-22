@@ -3,7 +3,8 @@
 **On-demand reverse proxy launcher for hashcards**
 
 An on-demand reverse proxy launcher layered on top of [hashcards](https://github.com/eudoxia0/hashcards).
-hashwrap starts a hashcards process the moment a browser request arrives and forwards traffic as soon as it is ready. Multiple decks can be served simultaneously under different URL paths, with automatic PWA support, dark mode, and mobile layout injection.
+hashwrap starts a hashcards process the moment a browser request arrives and forwards traffic as soon as it is ready.
+Multiple decks can be served simultaneously under different URL paths, with automatic PWA support, dark mode, and mobile layout injection.
 
 ![example](.github/readme-video.avif)
 
@@ -34,11 +35,13 @@ Browser → hashwrap (:3000)
               └─ /audio  → hashcards process D (auto-assigned port)
 ```
 
-A process is started only when it is not already running and is reused for all subsequent requests. If a process exits, it is restarted on the next incoming request.
+A process is started only when it is not already running and is reused for all subsequent requests.
+If a process exits, it is restarted on the next incoming request.
 
 ![example](.github/readme-img.png)
 
-Sub-path routes (`/math`, `/art`, etc.) automatically strip their prefix before forwarding requests to the backend. hashcards always expects to run at the root path and has no awareness of the prefix.
+Sub-path routes (`/math`, `/art`, etc.) automatically strip their prefix before forwarding requests to the backend.
+hashcards always expects to run at the root path and has no awareness of the prefix.
 
 ---
 
