@@ -206,6 +206,12 @@ Mounting `pwa_dir` as a Docker volume is the recommended way to
 customise icons without rebuilding the image — including
 platform-specific assets for iOS and Android home screens.
 
+Default icons (black background, white `#` glyph) can be regenerated with:
+```
+make icon
+```
+Requires [ImageMagick](https://imagemagick.org/). 
+
 ---
 
 ## Error behaviour
