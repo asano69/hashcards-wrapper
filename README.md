@@ -202,7 +202,9 @@ When enabled, hashwrap:
 - Injects PWA meta tags and a Service Worker registration script just before `</head>` in every HTML response
 - Injects `<link rel="icon">` tags into every HTML response so that the favicon resolves correctly regardless of the current path (e.g. `/art/`, `/math/`)
 
-Mounting `pwa_dir` as a Docker volume is the recommended way to customise icons without rebuilding the image.
+Mounting `pwa_dir` as a Docker volume is the recommended way to
+customise icons without rebuilding the image — including
+platform-specific assets for iOS and Android home screens.
 
 ---
 
