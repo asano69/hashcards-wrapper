@@ -1,5 +1,5 @@
 {
-  "public_base_url": "localhost:3001",
+  "public_base_url": "http://localhost:3001",
   "listen": ":3000",
   "pwa_dir": "/app/pwa",
   "style": {
@@ -13,22 +13,18 @@
     {
       "path": "/",
       "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false",
-      "strip_prefix": false
     },
     {
       "path": "/math",
       "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Mathematics",
-      "strip_prefix": true
     },
     {
       "path": "/art",
       "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Art",
-      "strip_prefix": true
     },
     {
       "path": "/audio",
       "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Audio",
-      "strip_prefix": true
     }
   ]
 }

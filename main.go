@@ -25,20 +25,12 @@ import (
 // ---------------------------------------------------------------------------
 
 type Config struct {
-	Listen            string `json:"listen"`
-	StartupTimeoutSec int    `json:"startup_timeout_sec"`
-	// PublicBaseURL is the externally reachable base URL of this server.
-	// Set this when running behind a reverse proxy (nginx, Caddy, etc.).
-	// Example: "https://cards.example.com"
-	// If omitted, defaults to "http://localhost:{listen_port}".
-	PublicBaseURL string `json:"public_base_url"`
-	// PWADir is the directory containing PWA static files:
-	// manifest.json, sw.js, icon-192.png, icon-512.png.
-	// If set, hashwrap serves these files directly and injects PWA tags into
-	// every HTML response. Leave empty to disable PWA support.
-	PWADir string        `json:"pwa_dir"`
-	Style  StyleConfig   `json:"style"`
-	Routes []RouteConfig `json:"routes"`
+	Listen            string        `json:"listen"`
+	StartupTimeoutSec int           `json:"startup_timeout_sec"`
+	PublicBaseURL     string        `json:"public_base_url"`
+	PWADir            string        `json:"pwa_dir"`
+	Style             StyleConfig   `json:"style"`
+	Routes            []RouteConfig `json:"routes"`
 }
 
 // StyleConfig controls injected CSS behaviour.
@@ -46,11 +38,6 @@ type StyleConfig struct {
 	// DarkBrightness is the CSS brightness() value applied in dark mode (default: 0.70).
 	// Lower = darker text. Typical range: 0.60–0.85.
 	DarkBrightness float64 `json:"dark_brightness"`
-
-	// Mobile font sizes — applied inside @media (max-width: 768px).
-	// All selectors target HTML tag names directly, so they work regardless
-	// of the app's class names or DOM structure.
-
 	// MobileRootSize sets html font-size on mobile, scaling all rem-based text
 	// proportionally. Default: "90%". Example: "85%", "14px".
 	MobileRootSize string `json:"mobile_root_size"`
@@ -65,11 +52,18 @@ type StyleConfig struct {
 type RouteConfig struct {
 	Path string `json:"path"`
 	// Command to run. {port} is replaced with the actual port number.
-	// Example: "./hashcards drill --host=0.0.0.0 --port={port} --open-browser=false /cards/math"
+	// Example: "./hashcards drill --host=0.0.0.0 --port={port} --open-browser=false"
 	Command string `json:"command"`
 	// Port to bind hashcards to. 0 = auto-assign a free port.
-	Port        int  `json:"port"`
-	StripPrefix bool `json:"strip_prefix"`
+	Port int `json:"port"`
+}
+
+// stripPrefix reports whether the path prefix should be stripped before
+// forwarding requests to the backend. Always true for sub-path routes;
+// false only for the root route "/". hashcards always expects to run at
+// the root, so any prefix must be removed before the request is forwarded.
+func (r RouteConfig) stripPrefix() bool {
+	return r.Path != "/"
 }
 
 // ---------------------------------------------------------------------------
@@ -144,9 +138,6 @@ func (e *EarlyExitError) Error() string {
 
 // ensureRunning starts the hashcards process if it is not already running,
 // then waits for it to begin listening on the configured port.
-// wrapperPort is the port hashwrap itself listens on, used as a fallback for
-// URL rewriting when no X-Forwarded-Host header is present.
-// configBase is the optional "public_base_url" from config (empty string = auto-detect).
 func (s *routeState) ensureRunning(cfg RouteConfig, wrapperPort int, configBase string, pwaEnabled bool, styleCfg StyleConfig, timeout time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -156,7 +147,7 @@ func (s *routeState) ensureRunning(cfg RouteConfig, wrapperPort int, configBase 
 		return nil
 	}
 
-	// Determine port
+	// Determine port.
 	port := cfg.Port
 	if port == 0 {
 		var err error
@@ -166,14 +157,14 @@ func (s *routeState) ensureRunning(cfg RouteConfig, wrapperPort int, configBase 
 		}
 	}
 
-	// Build command
+	// Build command.
 	cmdStr := strings.ReplaceAll(cfg.Command, "{port}", fmt.Sprintf("%d", port))
 	parts := strings.Fields(cmdStr)
 	if len(parts) == 0 {
 		return fmt.Errorf("command is empty")
 	}
 
-	// Capture stdout/stderr into buffer (also tee to terminal)
+	// Capture stdout/stderr into buffer (also tee to terminal).
 	var outBuf bytes.Buffer
 	cmd := exec.Command(parts[0], parts[1:]...)
 	cmd.Stdout = io.MultiWriter(os.Stdout, &outBuf)
@@ -199,12 +190,14 @@ func (s *routeState) ensureRunning(cfg RouteConfig, wrapperPort int, configBase 
 		}
 		return &EarlyExitError{Output: output}
 	}
+
 	log.Printf("[%s] ready (port=%d)", cfg.Path, port)
 
-	// Build reverse proxy
+	stripPrefix := cfg.stripPrefix()
+
+	// Build reverse proxy.
 	target, _ := url.Parse(fmt.Sprintf("http://127.0.0.1:%d", port))
 	proxy := httputil.NewSingleHostReverseProxy(target)
-
 	original := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		// Save the client-facing host and scheme BEFORE original() clears req.Host.
@@ -246,7 +239,7 @@ func (s *routeState) ensureRunning(cfg RouteConfig, wrapperPort int, configBase 
 		req.Header.Del("X-Forwarded-Proto")
 		req.Header.Del("X-Forwarded-For")
 
-		if cfg.StripPrefix {
+		if stripPrefix {
 			trimmed := strings.TrimPrefix(req.URL.Path, cfg.Path)
 			if trimmed == "" {
 				trimmed = "/"
@@ -255,13 +248,14 @@ func (s *routeState) ensureRunning(cfg RouteConfig, wrapperPort int, configBase 
 			req.URL.RawPath = strings.TrimPrefix(req.URL.RawPath, cfg.Path)
 		}
 	}
+
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 		log.Printf("[%s] proxy error: %v", cfg.Path, err)
 		http.Error(w, "failed to connect to hashcards", http.StatusBadGateway)
 	}
 
-	// Rewrite URLs in responses (always enabled; needed for full-URL asset refs)
-	proxy.ModifyResponse = makeRewriter(cfg.Path, cfg.StripPrefix, port, wrapperPort, pwaEnabled, styleCfg)
+	// Rewrite URLs in responses (always enabled; needed for full-URL asset refs).
+	proxy.ModifyResponse = makeRewriter(cfg.Path, stripPrefix, port, wrapperPort, pwaEnabled, styleCfg)
 
 	s.cmd = cmd
 	s.port = port
@@ -316,7 +310,7 @@ func makeRewriter(prefix string, stripPrefix bool, backendPort, wrapperPort int,
 			publicBase = fmt.Sprintf("http://localhost:%d", wrapperPort)
 		}
 
-		// Rewrite Location header for redirects
+		// Rewrite Location header for redirects.
 		if loc := resp.Header.Get("Location"); loc != "" {
 			if strings.HasPrefix(loc, "/") && !strings.HasPrefix(loc, prefix) {
 				newLoc := prefix + loc
@@ -365,17 +359,14 @@ func buildCommonStyles(s StyleConfig) string {
 		br = 0.70
 	}
 
-	// Build mobile block using only HTML tag selectors (no class names).
 	var mobile strings.Builder
 
-	// Root size: scales all rem-based text proportionally.
 	rootSize := s.MobileRootSize
 	if rootSize == "" {
 		rootSize = "90%"
 	}
 	fmt.Fprintf(&mobile, "  html { font-size: %s !important; }\n", rootSize)
 
-	// Per-tag overrides (optional).
 	if s.MobileH1Size != "" {
 		fmt.Fprintf(&mobile, "  h1 { font-size: %s !important; }\n", s.MobileH1Size)
 	}
@@ -398,7 +389,6 @@ func buildCommonStyles(s StyleConfig) string {
     filter: invert(1) hue-rotate(180deg) brightness(%.2f) !important;
   }
 }
-
 /* ---- Mobile layout (tag selectors only — class-name independent) ---- */
 @media (max-width: 768px) {
 %s}
@@ -417,7 +407,14 @@ if ("serviceWorker" in navigator)
   navigator.serviceWorker.register("/sw.js");
 </script>`
 
-// injectStyles inserts common styles (and optionally PWA tags) just before </head>.
+// faviconTags are always injected so that sub-path pages (/art/, /math/, etc.)
+// resolve the favicon correctly. Without this, browsers fall back to requesting
+// /art/favicon.ico which hashwrap does not serve.
+const faviconTags = `<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon-192.png" type="image/png">`
+
+// injectStyles inserts favicon links, common styles, and optionally PWA tags
+// just before </head> in every HTML response.
 func injectStyles(body []byte, pwaEnabled bool, styleCfg StyleConfig) []byte {
 	const marker = "</head>"
 	idx := bytes.Index(bytes.ToLower(body), []byte(marker))
@@ -428,6 +425,7 @@ func injectStyles(body []byte, pwaEnabled bool, styleCfg StyleConfig) []byte {
 	if pwaEnabled {
 		inject = pwaOnlyTags + "\n" + inject
 	}
+	inject = faviconTags + "\n" + inject
 	var buf bytes.Buffer
 	buf.Grow(len(body) + len(inject))
 	buf.Write(body[:idx])
@@ -438,12 +436,27 @@ func injectStyles(body []byte, pwaEnabled bool, styleCfg StyleConfig) []byte {
 
 // rewriteBody rewrites absolute URLs and paths in a response body.
 //
-// Step 1 — full URL rewrite (always applied):
+// Step 1 — port-based URL rewrite (always applied):
 //
-//	http://localhost:8002/file/... → https://example.com/greek/file/...
-//	http://localhost:8000/file/... → https://example.com/file/...  (prefix="/")
+//	Replaces any URL that explicitly references backendPort (regardless of
+//	hostname) with the public wrapper URL, prepending the path prefix when needed.
 //
-// Step 2 — absolute path rewrite (only when stripPrefix=true):
+//	  http://127.0.0.1:8002/file/... → https://example.com/greek/file/...
+//	  http://localhost:8000/file/...  → https://example.com/file/...  (prefix="/")
+//
+// Step 1b — hostname-based URL normalisation (always applied):
+//
+//	Replaces any URL — http:// or https://, with or without a port — that uses
+//	the public hostname with the canonical publicBase. This catches two cases
+//	that Step 1 misses:
+//
+//	  (a) hashcards generated a port-less absolute URL from the Host header
+//	      (e.g. http://hashcards.app.internal/art/file/...), which Step 1 cannot
+//	      match because its pattern requires an explicit ":port" segment.
+//	  (b) publicBase is https:// but Step 1's replacement still produced http://
+//	      (e.g. because X-Forwarded-Proto was absent); the scheme is corrected here.
+//
+// Step 2 — absolute path rewrite (only for sub-path routes):
 //
 //	href="/style.css" → href="/greek/style.css"
 func rewriteBody(body []byte, prefix string, stripPrefix bool, backendPort int, publicBase string) []byte {
@@ -456,15 +469,24 @@ func rewriteBody(body []byte, prefix string, stripPrefix bool, backendPort int, 
 	}
 
 	// Step 1: replace any full URL pointing at backendPort with the public wrapper URL.
-	// Match https?://any-host:backendPort/ regardless of hostname, because hashcards
-	// may use the machine's FQDN, 127.0.0.1, or localhost depending on configuration.
 	portPattern := regexp.MustCompile(
 		fmt.Sprintf(`https?://[^/"']+:%d/`, backendPort),
 	)
 	to := publicBase + pathPrefix + "/"
 	result = portPattern.ReplaceAll(result, []byte(to))
 
-	// Step 2: replace absolute paths (only needed when the prefix is stripped)
+	// Step 1b: normalise any URL that uses the public hostname to the canonical
+	// publicBase, correcting both scheme and port in one pass.
+	if u, err := url.Parse(publicBase); err == nil && u.Hostname() != "" {
+		hostPattern := regexp.MustCompile(
+			fmt.Sprintf(`https?://%s(?::\d+)?/`, regexp.QuoteMeta(u.Hostname())),
+		)
+		canonical := strings.TrimRight(publicBase, "/") + "/"
+		result = hostPattern.ReplaceAll(result, []byte(canonical))
+	}
+
+	// Step 2: rewrite absolute paths for sub-path routes so that root-relative
+	// references generated by hashcards resolve through the correct prefix.
 	if stripPrefix {
 		type rep struct{ from, to []byte }
 		patterns := []rep{
@@ -510,23 +532,19 @@ func getFreePort() (int, error) {
 func waitForPortOrExit(exited <-chan error, port int, timeout time.Duration) error {
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
 	deadline := time.Now().Add(timeout)
-
 	for time.Now().Before(deadline) {
 		select {
 		case <-exited:
 			return fmt.Errorf("process exited before port %d became available", port)
 		default:
 		}
-
 		conn, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
 		if err == nil {
 			conn.Close()
 			return nil // port is ready
 		}
-
 		time.Sleep(200 * time.Millisecond)
 	}
-
 	return fmt.Errorf("timed out waiting for port %d", port)
 }
 
@@ -550,11 +568,15 @@ func buildHandler(cfg Config) http.Handler {
 	timeout := time.Duration(cfg.StartupTimeoutSec) * time.Second
 	pwaEnabled := cfg.PWADir != ""
 
-	// Normalize configBase: strip trailing slash, prepend http:// if scheme is missing.
+	// Normalize configBase: strip any number of trailing slashes.
+	// The scheme must be provided explicitly — hashwrap cannot safely infer whether
+	// the deployment is HTTP or HTTPS. Omitting it is a fatal configuration error.
+	// Valid examples:
+	//   "https://cards.example.com"
+	//   "http://localhost:3001"
 	configBase := strings.TrimRight(cfg.PublicBaseURL, "/")
 	if configBase != "" && !strings.Contains(configBase, "://") {
-		configBase = "http://" + configBase
-		log.Printf("public_base_url: scheme missing, assuming http:// → %s", configBase)
+		log.Fatalf("public_base_url must include a scheme (e.g. \"http://%s\")", configBase)
 	}
 
 	states := make(map[string]*routeState, len(cfg.Routes))
@@ -572,6 +594,7 @@ func buildHandler(cfg Config) http.Handler {
 			"/sw.js":         "application/javascript",
 			"/icon-192.png":  "image/png",
 			"/icon-512.png":  "image/png",
+			"/favicon.ico":   "image/x-icon",
 		}
 		for path, ct := range pwaFiles {
 			path, ct := path, ct // capture
@@ -624,6 +647,7 @@ func buildHandler(cfg Config) http.Handler {
 				http.Error(w, "proxy not initialized", http.StatusInternalServerError)
 				return
 			}
+
 			proxy.ServeHTTP(w, r)
 		}
 
@@ -631,8 +655,9 @@ func buildHandler(cfg Config) http.Handler {
 		if route.Path != pattern {
 			mux.HandleFunc(route.Path, handler)
 		}
-		log.Printf("route registered: %s -> %s", route.Path, route.Command)
+		log.Printf("route registered: %s -> %s (strip_prefix=%v)", route.Path, route.Command, route.stripPrefix())
 	}
+
 	return mux
 }
 
@@ -656,6 +681,7 @@ func main() {
 	if err := json.NewDecoder(f).Decode(&cfg); err != nil {
 		log.Fatalf("failed to parse config: %v", err)
 	}
+
 	if cfg.Listen == "" {
 		cfg.Listen = ":8080"
 	}
