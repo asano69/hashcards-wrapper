@@ -150,6 +150,8 @@ docker compose up -d
 
 `extras/menu.sh` is a minimal index page that lists all configured routes as clickable links.
 
+<img src=".github/readme-img02.jpg" width="200" alt="hashcards">
+
 Mount it and register it as a route to enable it:
 ```yaml
 volumes:
