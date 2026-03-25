@@ -190,7 +190,7 @@ Always set `public_base_url` when running behind a reverse proxy. The scheme mus
 ```nginx
 server {
     listen 443 ssl;
-    server_name cards.example.com;
+    server_name hashcards.example.com;
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
@@ -203,7 +203,7 @@ server {
 
 ```json
 {
-  "public_base_url": "https://cards.example.com",
+  "public_base_url": "https://hashcards.example.com",
   "listen": ":3000"
 }
 ```
