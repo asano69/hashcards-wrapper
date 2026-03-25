@@ -65,6 +65,7 @@ services:
     volumes:
       - ./config.json:/app/config.json:ro
       - ./example:/app/data
+      - ./extras/menu.sh:/app/menu.sh:ro # option
     restart: unless-stopped
 ```
 ```bash
@@ -105,6 +106,11 @@ docker compose up -d
     {
       "path": "/audio",
       "command": "hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Audio"
+    },
+    {
+      "path": "/menu",
+      "command": "/app/menu.sh 8001",
+      "port": 8001
     }
   ]
 }
