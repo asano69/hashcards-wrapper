@@ -14,7 +14,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o hashwrap .
 
 # Stage 3: runtime
 FROM alpine:3.23
-RUN apk add --no-cache ca-certificates su-exec
+RUN apk add --no-cache ca-certificates su-exec busybox-extras
 COPY --from=rust-builder /usr/local/cargo/bin/hashcards /usr/local/bin/hashcards
 COPY --from=go-builder   /build/hashwrap                /usr/local/bin/hashwrap
 COPY pwa/                /app/pwa/

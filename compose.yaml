@@ -6,4 +6,5 @@ services:
     volumes:
       - ./config.json:/app/config.json:ro
       - ./example:/app/data
+      - ./tools/menu.sh:/app/menu.sh:ro # option
     restart: unless-stopped
