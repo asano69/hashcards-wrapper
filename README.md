@@ -65,7 +65,7 @@ services:
     volumes:
       - ./config.json:/app/config.json:ro
       - ./example:/app/data
-      - ./extras/menu.sh:/app/menu.sh:ro # option
+      - ./extras/menu.sh:/app/menu.sh:ro # optional
     restart: unless-stopped
 ```
 ```bash
