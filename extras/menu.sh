@@ -42,7 +42,7 @@ cat >"$HTML_FILE" <<HTML
       background: var(--bg);
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       padding: 4em 2em;
     }
@@ -81,7 +81,7 @@ cat >"$HTML_FILE" <<HTML
 </head>
 <body>
   <div class="wrap">
-    <p class="title">hashcards / index</p>
+    <p class="title">index</p>
     <ul>${LINKS}</ul>
   </div>
 </body>
