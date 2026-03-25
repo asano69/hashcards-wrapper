@@ -23,3 +23,4 @@ RUN chmod +x /entrypoint.sh
 WORKDIR /app/data
 EXPOSE 3000
 ENTRYPOINT ["/entrypoint.sh"]
+

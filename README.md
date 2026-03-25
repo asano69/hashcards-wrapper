@@ -32,8 +32,7 @@ Browser → hashwrap (:3000)
               ├─ /       → hashcards process A (auto-assigned port)
               ├─ /math   → hashcards process B (auto-assigned port)
               ├─ /art    → hashcards process C (auto-assigned port)
-              ├─ /audio  → hashcards process D (auto-assigned port)
-              └─ /menu   → hashcards process E (optional, static port)
+              └─ /audio  → hashcards process D (auto-assigned port)
 ```
 
 A process is started only when it is not already running and is reused for all subsequent requests.
