@@ -4,6 +4,7 @@ on:
     branches: [main]
     tags: ["v*"]
     paths:
+      - Dockerfile
       - HASHCARDS_VERSION
       - go.mod
       - go.sum
@@ -13,6 +14,7 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - Dockerfile
       - HASHCARDS_VERSION
       - go.mod
       - go.sum

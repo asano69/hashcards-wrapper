@@ -32,7 +32,8 @@ Browser → hashwrap (:3000)
               ├─ /       → hashcards process A (auto-assigned port)
               ├─ /math   → hashcards process B (auto-assigned port)
               ├─ /art    → hashcards process C (auto-assigned port)
-              └─ /audio  → hashcards process D (auto-assigned port)
+              ├─ /audio  → hashcards process D (auto-assigned port)
+              └─ /menu   → hashcards process E (optional, static port)
 ```
 
 A process is started only when it is not already running and is reused for all subsequent requests.
@@ -146,6 +147,28 @@ docker compose up -d
 
 ---
 
+## Menu page (optional)
+
+`extras/menu.sh` is a minimal index page that lists all configured routes as clickable links.
+
+Mount it and register it as a route to enable it:
+```yaml
+volumes:
+  - ./extras/menu.sh:/app/menu.sh:ro
+```
+```json
+{
+  "path": "/menu",
+  "command": "/app/menu.sh 8001",
+  "port": 8001
+}
+```
+
+The port passed to `menu.sh` must match the `port` field in the route definition.
+The page reads `config.json` at startup and builds the link list automatically.
+
+---
+
 ## Path prefix behaviour
 
 Requests to sub-path routes always have their prefix stripped before being forwarded to hashcards. hashcards expects to run at the root path and would return 404 errors if the prefix were forwarded unchanged.
@@ -222,26 +245,6 @@ make icon
 Requires [ImageMagick](https://imagemagick.org/).
 
 ---
-
-## Menu page (optional)
-
-`extras/menu.sh` is a minimal index page that lists all configured routes as clickable links.
-
-Mount it and register it as a route to enable it:
-```yaml
-volumes:
-  - ./extras/menu.sh:/app/menu.sh:ro
-```
-```json
-{
-  "path": "/menu",
-  "command": "/app/menu.sh 8001",
-  "port": 8001
-}
-```
-
-The port passed to `menu.sh` must match the `port` field in the route definition.
-The page reads `config.json` at startup and builds the link list automatically.
 
 ## Error behaviour
 
