@@ -38,7 +38,7 @@ Browser → hashwrap (:3000)
 A process is started only when it is not already running and is reused for all subsequent requests.
 If a process exits, it is restarted on the next incoming request.
 
-![example](.github/readme-img02.jpg)
+![example](.github/readme-img01.jpg)
 
 Sub-path routes (`/math`, `/art`, etc.) automatically strip their prefix before forwarding requests to the backend.
 hashcards always expects to run at the root path and has no awareness of the prefix.
