@@ -2,7 +2,7 @@
 PORT="${1:-8001}"
 HTML_FILE=/tmp/index.html
 
-# public_base_url からオリジン部分（scheme + host[:port]）だけ抽出
+# Extract only the origin part (scheme + host[:port]) from public_base_url
 ORIGIN=$(grep -o '"public_base_url": "[^"]*"' /app/config.json |
 	grep -o 'https\?://[^/"]*')
 
