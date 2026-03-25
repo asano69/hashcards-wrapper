@@ -122,7 +122,7 @@ docker compose up -d
 |---|---|---|---|
 | `listen` | string | `":8080"` | Address hashwrap binds to (e.g. `":3000"`, `"0.0.0.0:3000"`) |
 | `startup_timeout_sec` | int | `10` | Seconds to wait for hashcards to start listening |
-| `public_base_url` | string | auto-detected | Externally reachable base URL. Must include the scheme (e.g. `"https://cards.example.com"`, `"http://localhost:3000"`). Required when running behind a reverse proxy |
+| `public_base_url` | string | auto-detected | Externally reachable base URL. Must include the scheme (e.g. `"https://hashcards.example.com"`, `"http://localhost:3000"`). Required when running behind a reverse proxy |
 | `pwa_dir` | string | — | Directory containing PWA static files. Leave empty to disable PWA |
 | `style` | object | — | CSS injection settings (see below) |
 | `routes` | array | — | Route definitions (see below) |
@@ -264,7 +264,7 @@ hashcards embeds self-referencing URLs in its responses (e.g. `http://127.0.0.1:
 ```
 http://127.0.0.1:8000/file/img.jpg
         ↓
-https://cards.example.com/math/file/img.jpg
+https://hashcards.example.com/math/file/img.jpg
 ```
 
 Absolute paths such as `href="/"` are also prefixed for sub-path routes.
