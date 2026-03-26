@@ -233,17 +233,17 @@ A process is started only when it is not already running and is reused for all s
 If a process exits, it is restarted on the next incoming request.
 
 ```console
-hashcards | 2026/03/26 21:36:14 hashwrap listening on :3000
-hashcards | 2026/03/26 21:36:14 PWA enabled: serving static files from /app/pwa
-hashcards | 2026/03/26 21:36:14 route registered: / -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false (strip_prefix=false)
-hashcards | 2026/03/26 21:36:14 route registered: /math -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Mathematics (strip_prefix=true)
-hashcards | 2026/03/26 21:36:14 route registered: /art -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Art (strip_prefix=true)
-hashcards | 2026/03/26 21:36:14 route registered: /audio -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Audio (strip_prefix=true)
-hashcards | 2026/03/26 21:36:24 -> GET /art
-hashcards | 2026/03/26 21:36:24 [/art] starting: hashcards drill --host=0.0.0.0 --port=38367 --open-browser=false --from-deck=Art
-hashcards | 2026/03/26 21:36:25 [/art] ready (port=38367)
-hashcards | 2026/03/26 21:36:25 -> GET /art/file/thetempest.webp
-hashcards | 2026/03/26 21:36:25 [/art] process running (port=38367), reusing
+hashwrap | 2026/03/26 21:36:14 hashwrap listening on :3000
+hashwrap | 2026/03/26 21:36:14 PWA enabled: serving static files from /app/pwa
+hashwrap | 2026/03/26 21:36:14 route registered: / -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false (strip_prefix=false)
+hashwrap | 2026/03/26 21:36:14 route registered: /math -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Mathematics (strip_prefix=true)
+hashwrap | 2026/03/26 21:36:14 route registered: /art -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Art (strip_prefix=true)
+hashwrap | 2026/03/26 21:36:14 route registered: /audio -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Audio (strip_prefix=true)
+hashwrap | 2026/03/26 21:36:24 -> GET /art
+hashwrap | 2026/03/26 21:36:24 [/art] starting: hashcards drill --host=0.0.0.0 --port=38367 --open-browser=false --from-deck=Art
+hashwrap | 2026/03/26 21:36:25 [/art] ready (port=38367)
+hashwrap | 2026/03/26 21:36:25 -> GET /art/file/thetempest.webp
+hashwrap | 2026/03/26 21:36:25 [/art] process running (port=38367), reusing
 ```
 
 Sub-path routes (`/math`, `/art`, etc.) automatically strip their prefix before forwarding requests to the backend.
