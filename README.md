@@ -6,7 +6,8 @@ An on-demand reverse proxy launcher layered on top of [hashcards](https://github
 hashwrap starts a hashcards process the moment a browser request arrives and forwards traffic as soon as it is ready.
 Multiple decks can be served simultaneously under different URL paths, with automatic PWA support, dark mode, and mobile layout injection.
 
-It runs entirely from a pre-built Alpine-based 22.5 MB container provided on GitHub, requiring no additional setup to launch hashcards.
+It runs entirely from a pre-built Alpine-based 22.5 MB container provided on GitHub, requiring no additional build steps.
+After pulling the container, you still need to provide a `compose.yaml` and configure the access URL in `config.json`.
 
 ![example](.github/readme-video.avif)
 
@@ -26,37 +27,18 @@ It runs entirely from a pre-built Alpine-based 22.5 MB container provided on G
 
 ---
 
-## How it works
-
-```
-Browser → hashwrap (:3000)
-              │
-              ├─ /       → hashcards process A (auto-assigned port)
-              ├─ /math   → hashcards process B (auto-assigned port)
-              ├─ /art    → hashcards process C (auto-assigned port)
-              └─ /audio  → hashcards process D (auto-assigned port)
-```
-
-A process is started only when it is not already running and is reused for all subsequent requests.
-If a process exits, it is restarted on the next incoming request.
-
-![example](.github/readme-img01.jpg)
-
-Sub-path routes (`/math`, `/art`, etc.) automatically strip their prefix before forwarding requests to the backend.
-hashcards always expects to run at the root path and has no awareness of the prefix.
-
----
-
-
 ## Usage
 
 Clone the repository to get the example config and deck:
+
 ```bash
 git clone https://github.com/asano69/hashcards-wrapper.git
 cd hashcards-wrapper
 ```
 
-Then start with Docker Compose:
+Then update config.json so that `public_base_url` matches the URL you will use to access it from your browser (e.g. http://localhost:3001).
+Start with Docker Compose:
+
 ```yaml
 # compose.yaml
 services:
@@ -249,15 +231,36 @@ Requires [ImageMagick](https://imagemagick.org/).
 
 ---
 
-## Error behaviour
+## How it works
 
-### Process exits before the port is ready
+```
+Browser → hashwrap (:3000)
+              │
+              ├─ /       → hashcards process A (auto-assigned port)
+              ├─ /math   → hashcards process B (auto-assigned port)
+              ├─ /art    → hashcards process C (auto-assigned port)
+              └─ /audio  → hashcards process D (auto-assigned port)
+```
 
-hashwrap returns an HTML error page showing the process's stdout / stderr output and a "check again" link. Clicking the link triggers a fresh startup attempt.
+A process is started only when it is not already running and is reused for all subsequent requests.
+If a process exits, it is restarted on the next incoming request.
 
-### Startup timeout
+```console
+hashcards | 2026/03/26 21:36:14 hashwrap listening on :3000
+hashcards | 2026/03/26 21:36:14 PWA enabled: serving static files from /app/pwa
+hashcards | 2026/03/26 21:36:14 route registered: / -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false (strip_prefix=false)
+hashcards | 2026/03/26 21:36:14 route registered: /math -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Mathematics (strip_prefix=true)
+hashcards | 2026/03/26 21:36:14 route registered: /art -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Art (strip_prefix=true)
+hashcards | 2026/03/26 21:36:14 route registered: /audio -> hashcards drill --host=0.0.0.0 --port={port} --open-browser=false --from-deck=Audio (strip_prefix=true)
+hashcards | 2026/03/26 21:36:24 -> GET /art
+hashcards | 2026/03/26 21:36:24 [/art] starting: hashcards drill --host=0.0.0.0 --port=38367 --open-browser=false --from-deck=Art
+hashcards | 2026/03/26 21:36:25 [/art] ready (port=38367)
+hashcards | 2026/03/26 21:36:25 -> GET /art/file/thetempest.webp
+hashcards | 2026/03/26 21:36:25 [/art] process running (port=38367), reusing
+```
 
-If the port does not open within `startup_timeout_sec` seconds, hashwrap returns HTTP 500.
+Sub-path routes (`/math`, `/art`, etc.) automatically strip their prefix before forwarding requests to the backend.
+hashcards always expects to run at the root path and has no awareness of the prefix.
 
 ---
 
@@ -268,12 +271,24 @@ hashcards embeds self-referencing URLs in its responses (e.g. `http://127.0.0.1:
 ```
 http://127.0.0.1:8000/file/img.jpg
         ↓
-https://hashcards.example.com/math/file/img.jpg
+https://hashcards.example.com/art/file/img.jpg
 ```
 
 Absolute paths such as `href="/"` are also prefixed for sub-path routes.
 
 > **Note:** `Accept-Encoding: gzip` is never forwarded to the backend, because compressed response bodies cannot be rewritten.
+
+---
+
+## Error behaviour
+
+### Process exits before the port is ready
+
+hashwrap returns an HTML error page showing the process's stdout / stderr output and a "check again" link. Clicking the link triggers a fresh startup attempt.
+
+### Startup timeout
+
+If the port does not open within `startup_timeout_sec` seconds, hashwrap returns HTTP 500.
 
 ---
 
