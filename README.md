@@ -6,6 +6,8 @@ An on-demand reverse proxy launcher layered on top of [hashcards](https://github
 hashwrap starts a hashcards process the moment a browser request arrives and forwards traffic as soon as it is ready.
 Multiple decks can be served simultaneously under different URL paths, with automatic PWA support, dark mode, and mobile layout injection.
 
+It runs entirely from a pre-built Alpine-based 22.5 MB container provided on GitHub, requiring no additional setup to launch hashcards.
+
 ![example](.github/readme-video.avif)
 
 ---
