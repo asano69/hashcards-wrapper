@@ -154,19 +154,6 @@ The page reads `config.json` at startup and builds the link list automatically.
 
 ---
 
-## Path prefix behaviour
-
-Requests to sub-path routes always have their prefix stripped before being forwarded to hashcards. hashcards expects to run at the root path and would return 404 errors if the prefix were forwarded unchanged.
-
-| Request from browser | Forwarded to backend |
-|---|---|
-| `/art/file/assets/thetempest.webp` | `/file/assets/thetempest.webp` |
-| `/math/file/assets/diagram.png` | `/file/assets/diagram.png` |
-
-Routes mounted at `/` forward paths unchanged.
-
----
-
 ## Behind a reverse proxy (nginx / Caddy)
 
 Always set `public_base_url` when running behind a reverse proxy. The scheme must be included — hashwrap cannot infer whether the public endpoint is HTTP or HTTPS.
@@ -264,8 +251,23 @@ hashcards always expects to run at the root path and has no awareness of the pre
 
 ---
 
-## URL rewriting
+## Request path prefix behaviour
 
+This applies to incoming requests.
+Requests to sub-path routes always have their prefix stripped before being forwarded to hashcards. hashcards expects to run at the root path and would return 404 errors if the prefix were forwarded unchanged.
+
+| Request from browser | Forwarded to backend |
+|---|---|
+| `/art/file/assets/thetempest.webp` | `/file/assets/thetempest.webp` |
+| `/math/file/assets/diagram.png` | `/file/assets/diagram.png` |
+
+Routes mounted at `/` forward paths unchanged.
+
+---
+
+## Response URL rewriting behaviour
+
+This applies to outgoing responses.
 hashcards embeds self-referencing URLs in its responses (e.g. `http://127.0.0.1:8000/file/img.jpg`) that are unreachable by the browser. hashwrap reads the response body (HTML / CSS / JS / JSON) and rewrites any such URL to the public-facing address.
 
 ```
