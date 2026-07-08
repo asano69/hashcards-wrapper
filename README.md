@@ -1,5 +1,8 @@
 # hashcards-wrapper
 
+>[!NOTE]
+>See also: [Hatchards](https://github.com/asano69/hatchards) - A Go reimplementation of hashcards featuring a web application, deck selection, statistical graphs, Git mirroring with post-mirror hook execution, authentication, and an SQLite viewer. 
+
 **On-demand reverse proxy launcher for hashcards**
 
 An on-demand reverse proxy launcher layered on top of [hashcards](https://github.com/eudoxia0/hashcards).
